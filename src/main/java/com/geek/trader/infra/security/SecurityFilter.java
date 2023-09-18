@@ -14,6 +14,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static org.thymeleaf.util.StringUtils.trim;
+
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
@@ -24,9 +26,9 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Override
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var token = this.recoverToken(request);
+        var token = removeChar(this.recoverToken(request));
         if(token != null){
-            var login = tokenService.validateToken(removefirstChar(token));
+            var login = tokenService.validateToken(token);
             UserDetails user = userRepository.findByLogin(login);
 
             var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
@@ -43,7 +45,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         return authHeader.replace("Bearer", "");
     }
 
-    public String removefirstChar(String str)
+    public String removeChar(String str)
     {
         if (str == null || str.length() == 0) {
             return str;

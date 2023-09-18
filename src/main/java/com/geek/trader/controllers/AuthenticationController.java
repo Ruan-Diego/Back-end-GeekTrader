@@ -5,6 +5,8 @@ import com.geek.trader.domain.user.LoginResponseDTO;
 import com.geek.trader.domain.user.User;
 import com.geek.trader.infra.security.TokenService;
 import com.geek.trader.repositories.UserRepository;
+import com.geek.trader.services.LoginService;
+import com.geek.trader.services.RegisterService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,33 +23,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("auth")
 public class AuthenticationController {
     @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
     private UserRepository repository;
-
     @Autowired
-    private TokenService tokenService;
+    private LoginService loginService;
+    private RegisterService registerService;
+
+
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
-        var usernamePassword = new UsernamePasswordAuthenticationToken((data.login()), data.password());
-        var auth = this.authenticationManager.authenticate(usernamePassword);
-
-        var token = tokenService.generateToken((User) auth.getPrincipal());
-
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        return loginService.login(data);
     }
 
     @PostMapping("/register")
-    public  ResponseEntity register(@RequestBody @Valid AuthenticationDTO data){
-        if(this.repository.findByLogin(data.login()) != null)
-            return ResponseEntity.badRequest().build();
-
-        String encryptedPassword = new BCryptPasswordEncoder().encode((data.password()));
-        User newUser = new User(data.login(), encryptedPassword);
-
-        this.repository.save(newUser);
-
-        return ResponseEntity.ok().build();
+    public  ResponseEntity register(@RequestBody @Valid AuthenticationDTO data) {
+        return registerService.register(data);
     }
 }
